@@ -35,6 +35,7 @@ class Docket:
     def __init__(self, id = ""):
         self.id = id
 
+#todo: is judge needed?
 class Judge:
     def __init__(self, name = "", party_appoint = ""):
         self.name = name
@@ -64,6 +65,7 @@ def main():
     print("end")
 
 def parse_CL(json_CL):
+    #todo: fill out all available and relevant metadata
     warnings.filterwarnings('ignore',message=r".*looks like a URL. Beautiful Soup is not an HTTP client. You should probably.*")
     data = json.loads(json_CL)
     cluster = BeautifulSoup(data['cluster'], 'html.parser').text
@@ -79,8 +81,9 @@ def parse_CL(json_CL):
     cluster.opinion = opinion
     if data['html'] != "":
         opinion.text = BeautifulSoup(data['html'],'html.parser')
+    #todo: fix parsing of decisions without html entries
     else:
-        return
+        opinion.text = BeautifulSoup(data['html_with_citations'], 'html.parser')
 
     cites = []
     for tag in opinion.text.find_all('p', class_='case_cite'):
@@ -93,19 +96,25 @@ def parse_CL(json_CL):
         opinion_text_soup = tag.find_all('p', class_="indent")
         for tag in opinion_text_soup:
             opinion_text = opinion_text + tag.prettify()
+
+    # todo: fix footnote parsing...make sure linked footnotes are present
     footnotes = opinion.text.find_all('div', class_="footnote", id=re.compile("^fn\d+"))
     for tag in footnotes:
         opinion_text = opinion_text + tag.prettify()
     opinion.opinion_text = opinion_text
 
-    os.makedirs("./parsed_cases/", exist_ok=True)
-    doc = open("./parsed_cases/" + opinion.name + "_parsed", 'w')
-    doc.write(opinion.opinion_text)
-    doc.close()
+    if opinion.opinion_text == "":
+        warnings.warn(opinion.name + " failed to parse")
+    else:
+        os.makedirs("./parsed_cases/", exist_ok=True)
+        doc = open("./parsed_cases/" + opinion.name + "_parsed", 'w')
+        doc.write(opinion.opinion_text)
+        doc.close()
 
 def get_dir(dir="./../Citator_Cases"):
     return dir
 
+#todo: develop algorithm to split opinion clusters
 def split_opinion(cluster, init_opinion):
     text_full_soup = init_opinion.text
     text = init_opinion.opinion_text
