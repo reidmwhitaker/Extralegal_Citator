@@ -16,6 +16,11 @@ class Opinion:
         self.id = id
         self.opinion_text = ""
         self.name = name
+        self.citations = []
+
+    def find_citation(self):
+        match = re.search(r'(?<!;\S)([A-Z])\.\s(\S.+?)\,\s([\sA-Za-z:]+?)\s(\d*\-?\d*)\s\(([0-9]{3,4})\)',self.opinion_text)
+        citations.apend()
 
 class OpinionCluster:
     def __init__(self, opinions = "", scdb_id = "", scdb_votes_majority = "", scdb_votes_minority = "",
