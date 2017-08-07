@@ -1,0 +1,263 @@
+### Newspapers
+
+# todo:fix urls
+        matches = re.finditer(
+            r"([^\s]+),\s([^,]+),\s([^,]+),\s([A-Za-z]{3}.\s\d{1,2},\s[0-9]{3,4}),\sonline at ([A-Za-z:\/.0-9]+).\s",
+            text
+        )
+        if matches:
+            for match in matches:
+                try:
+                    references.append(
+                        Reference(type="newspaper", authors=[(match.group(1), "")], date=match.group(4), journal_title=match.group(3),
+                                  title=match.group(2), url=match.group(5),
+                                  original_cite=match.string[match.start(1):match.end(5)]))
+                except InvalidCitationError:
+                    print("invalid citation!")
+                else:
+                    pass
+        return (references)
+
+matches = re.finditer(
+            r"([^\s]+),\s([^,]+),\s([^,]+),\s([A-Za-z]{3}.\s\d{1,2},?\s[0-9]{3,4}).", text)
+        if matches:
+            for match in matches:
+                # if not match.group(3).find("; id.,"):
+                try:
+                    references.append(
+                        Reference(type="newspaper", authors=[(match.group(1), "")], date=match.group(4), journal_title=match.group(3),
+                                  title=match.group(2),
+                                  original_cite=match.string[match.start(1):match.end(4)]))
+                except InvalidCitationError:
+                    print("invalid citation!")
+                else:
+                    pass
+
+        matches = re.finditer(
+            r"([^\s]+),\s([^,]+),\s([^,]+),\s([A-Za-z]{3}.\s\d{1,2},?\s[0-9]{3,4}),\sp.\s([A-Za-z0-9]+).", text)
+        if matches:
+            for match in matches:
+                # if not match.group(3).find("; id.,"):
+                try:
+                    references.append(
+                        Reference(type="newspaper", authors=[(match.group(1), "")], date=match.group(4), journal_title=match.group(3),
+                                  title=match.group(2), start_page=match.group(5),
+                                  original_cite=match.string[match.start(1):match.end(5)]))
+                except InvalidCitationError:
+                    print("invalid citation!")
+                else:
+                    pass
+
+# matches = re.findall(r"(?:[\"'\.;]|see|See|cf\.|Cf\.|Accord|accord)\s+([A-Za-z]+),\s+([A-Za-z\.\s:',]+),\s+(\d+)\s+([A-Za-z\.\s]+)\s+(\d+)(?:,\s+(\d*\-?\d+))?\s+\(([\s\S]*?)([0-9]{3,4})\)",
+        #                    text)
+
+
+ # matches = re.findall(r"(?:[\"'\.;]|see|See|cf\.|Cf\.|Accord|accord)\s+(?:([A-Za-z])?\.\s+?([A-Za-z]+?)\s+?\&\s+?)?([A-Za-z])?\.\s+?([A-Za-z]+?),\s+?([\sA-Za-z:',]+?)\s+?(\d*\-?\d+)\s+?\(([\s\S]*?)([0-9]{3,4})\)",
+        #              text)
+
+                # match = re.search(r'(?<!;\S)([A-Z])\.\s(\S.+?)\,\s([\sA-Za-z:]+?)\s(\d*\-?\d*)\s\(([0-9]{3,4})\)', text)
+
+
+
+        # todo: fix indexing
+        matches = re.finditer(
+            r"(?:([A-Za-z]+?)\s+?\&\s+?)?(?:([A-Z])\.\s+)?([A-Za-z]+),\s+([^(see)][A-Za-z\d][\sA-Za-z:',\-\")]+?[A-Za-z\d]),\s+(\d+)\s+([A-Za-z\.\s]+)\s+(\d+)(?:,\s+(\d*\-?\d+))?\s+\(([\sA-Za-z\.\d]*?)([0-9]{4})\)",
+            text)
+        # r"(?:([A-Z])\.\s+)?([A-Za-z]+),\s+([^(see)][A-Za-z\d][\sA-Za-z:',\-\")]+?(?:v\.)?[\sA-Za-z:',\-\")]+?[A-Za-z\d]),\s+(\d+)\s+([A-Za-z\.\s]+)\s+(\d+)(?:,\s+(\d*\-?\d+))?\s+\(([\sA-Za-z\.\d]*?)([0-9]{3,4})\)",
+        # text
+        if matches:
+            for match in matches:
+                if match.group(5) not in reporter_titles:
+                    if not match.group(1):
+                        author = [(match.group(3), match.group(2))]
+                    else:
+                        author = [(match.group(3), match.group(2)), (match.group(1), match.group(1))]
+                    name = match.group(4)
+                    try:
+                        references.append(Reference(type="journal", authors=author, title=name, volume=match.group(5),
+                                                journal_title=match.group(6), start_page=match.group(7),
+                                                pages=match.group(8), edition=match.group(9),
+                                                date=match.group(10),
+                                                original_cite=match.string[match.start(1):match.end(10)]))
+                    except InvalidCitationError:
+                        print("invalid citation!")
+        return create_citations(references,opinion)
+
+        # Multivolume books
+        matches = re.finditer(
+            r"(\d+)\s+(?:([A-Za-z])?\.\s+?([A-Za-z]+?)\s+?\&\s+?)?([A-Za-z])?\.\s+?([A-Za-z]+?),\s+?([\sA-Za-z:',]+?)\s+?(\d*\-?\d+)\s+?\(([\sA-Za-z\.\d]*\s)?([0-9]{3,4})\)",
+            text)
+        if matches:
+            for match in matches:
+                if not match.group(2):
+                    author = [(match.group(4), match.group(3))]
+                else:
+                    author = [(match.group(2), match.group(1)), (match.group(4), match.group(3))]
+                try:
+                    references.append(Reference(type="book", authors=author, title=match.group(6),
+                                                date=match.group(9), volume=match.group(1), pages=match.group(7),
+                                                edition=match.group(8),
+                                                original_cite=match.string[match.start(1):match.end(9)]))
+                except InvalidCitationError:
+                    print("invalid citation!")
+                else:
+                    pass
+
+        matches = re.finditer(
+            r"(?:([A-Za-z])?\.\s+?([A-Za-z]+?)\s+?\&\s+?)?([A-Za-z])?\.\s+?([A-Za-z]+?),\s+?([\sA-Za-z:',]+?)\s+?(\d*\-?\d+)\s+?\(([\sA-Za-z\.\d]*\s)?([0-9]{3,4})\)",
+            text)
+        if matches:
+            for match in matches:
+                if not match.group(1):
+                    author = [(match.group(4), match.group(3))]
+                else:
+                    author = [(match.group(2), match.group(1)), (match.group(4), match.group(3))]
+                try:
+                    references.append(Reference(type="book", authors=author, title=match.group(5),
+                                            date=match.group(8), pages=match.group(6), edition=match.group(7),
+                                            original_cite=match.string[match.start(1):match.end(8)]))
+                except InvalidCitationError:
+                    print("invalid citation!")
+                else:
+                    pass
+
+        matches = re.finditer(
+            r"(?:([A-Z])?\.\s+?([A-Za-z]+?)\s+?\&\s+?)?([A-Z])?\.\s+?([A-Za-z]+?),\s+?([\sA-Za-z:',]+?),\s+in\s+([\sA-Za-z:',]+?)\s+(\d*),\s+(\d*\-?\d+)\s+?\(([\sA-Za-z\.\d]*\s)?([0-9]{4})\)",
+            text)
+        if matches:
+            for match in matches:
+                if not match.group(2):
+                    author = [(match.group(5), match.group(4))]
+                else:
+                    author = [(match.group(2), match.group(1)), (match.group(4), match.group(3))]
+                try:
+                    references.append(
+                        Reference(type="book section", authors=author, title=match.group(5), date=match.group(10),
+                                  pages=match.group(8),
+                                  volume_title=match.group(6), start_page=match.group(7), edition=match.group(9),
+                                  original_cite=match.string[match.start(1):match.end(10)]))
+                except InvalidCitationError:
+                    print("invalid citation!")
+                else:
+                    pass
+
+        #Books with sections
+        matches = re.finditer(r"(\d+)?\s?(?:(?:([A-Z]\.)\s[A-Za-z]+,?\s))*(?:([A-Z]\.)\s[A-Za-z]+,?\s(?:&|(?:and)))?\s?([A-Z]\.)?\s?([A-Z][A-Za-z]+),\s([A-Za-z\s']+)\\u00a7(?:\\u00a7)?\s?(\d+(?:-\d+)?(\.\d+)?(\([a-z\d]+\))?)(\[[A-Za-z\d]+\])*(?:,\s\d+)*\s?(?:,\sp(p)?.\s(\d+(?:-\d+)?))?(?:,\sat\s(\d+(?:-\d+)?))?\s?(?:,\sand\sn.\s\d+)?\s?\(([\sA-Za-z\.\d]*\s)?([0-9]{4})\)",
+                              text)
+
+        #Books with numbered lines
+        matches = re.finditer(r"(\d+)?\s?(?:(?:([A-Z]\.)\s[A-Za-z]+,?\s))*(?:([A-Z]\.)\s[A-Za-z]+,?\s(?:&|(?:and)))?\s?([A-Z]\.)?\s?([A-Z][A-Za-z]+),\s([A-Za-z\s']+)\s([A-Za-z\-\.\d]+)\s?\(([\sA-Za-z\.\d]*\s)?([0-9]{4})\)")
+
+        #Books with cited note
+        matches = re.finditer(r"(\d+)?\s?(?:(?:([A-Z]\.)\s[A-Za-z]+,?\s))*(?:([A-Z]\.)\s[A-Za-z]+,?\s(?:&|(?:and)))?\s?([A-Z]\.)?\s?([A-Z][A-Za-z]+),\s([A-Za-z\s']+)\s([A-Za-z\-\.\d]+)(,\s?n.\s\d+)\s?\(([\sA-Za-z\.\d]*\s)?([0-9]{4})\)")
+
+
+        #Books with sections,2
+        matches = re.finditer(r"(\d+)?\s?(?:(?:([A-Z]\.)\s[A-Za-z]+,?\s))*(?:([A-Z]\.)\s[A-Za-z]+,?\s(?:&|(?:and)))?\s?([A-Z]\.)?\s?([A-Z][A-Za-z]+),\s([A-Za-z\s']+),\s(\\u00a7)?(?:\\u00a7)?\s?(\d+(?:-\d+)?(\.\d+)?(\([a-z\d]+\))?)(\[[A-Za-z\d]+\])*(?:,\s\d+)*\s?(?:,\sp(p)?.\s(\d+(?:-\d+)?))?(?:,\sat\s(\d+(?:-\d+)?))?\s?(?:,\sand\sn.\s\d+)?\s?\(([\sA-Za-z\.\d]*\s)?([0-9]{4})\)", text)
+
+
+        #Books with chapters, 1
+        matches = re.finditer(r"(\d+)?\s?(?:(?:([A-Z]\.)\s[A-Za-z]+,?\s))*(?:([A-Z]\.)\s[A-Za-z]+,?\s(?:&|(?:and)))?\s?([A-Z]\.)?\s?([A-Z][A-Za-z]+),\s([A-Za-z\s']+),\sch.\s(\d+),\s(\\u00a7)?(?:\\u00a7)?\s?(\d+(?:-\d+)?(\.\d+)?(\([a-z\d]+\))?)(\[[A-Za-z\d]+\])*(?:,\s\d+)*\s?(?:,\sp(p)?.\s(\d+(?:-\d+)?))?(?:,\sat\s(\d+(?:-\d+)?))?\s?(?:,\sand\sn.\s\d+)?\s?\(([\sA-Za-z\.\d]*\s)?([0-9]{4})\)", text)
+
+        #Books with yeared editions
+        matched = re.finditer(r"(\d+)?\s?(?:(?:([A-Z]\.)\s[A-Za-z]+,?\s))*(?:([A-Z]\.)\s[A-Za-z]+,?\s(?:&|(?:and)))?\s?([A-Z]\.)?\s?([A-Z][A-Za-z]+),\s([A-Za-z\s']+)\s(\d+)\s?\(([0-9]{4})\s?(ed.)\)", text)
+
+        #Multiauthor books
+        matches = re.finditer(r"(\d+\s)?(?:(([A-Za-z])?\.\s+?([A-Za-z]+?,\s+))?(([A-Za-z])?\.\s+?([A-Za-z]+?,\s+))?(([A-Za-z])?\.\s+?([A-Za-z]+?,\s+))?(?:&|(?:and))\s+?)?([A-Za-z])?\.\s+?([A-Za-z]+?),\s+?([\sA-Za-z:',]+?)\s+?(\d*\-?\d+)\s+?\(([\sA-Za-z\.\d]*\s)?([0-9]{3,4})\)",
+                              text)
+
+        #Books with sections
+        matches = re.finditer(r"(\d+[A-Z]?\s)?(([A-Z].)?\s?([A-Z][a-z]+,\s)?([A-Z].)?\s?([A-Z][a-z]+,\s)?([A-Z].)?\s?([A-Z][a-z]+)?,?\s&\s)?([A-Z].)?\s?([A-Z][a-z]+),\s([A-Za-z\d][\sA-Za-z:',]+?[A-Za-z\d])\s\\u00a7\s?([\d\:\.]+([\[\]A-Z\d]+)?),\s(?:\\u00b6\s?(\d+),\s)?(?:(?:pp\.)|(?:p\.))\s?(\d*\-?\d+)\s+?\(([A-Za-z\d][\sA-Za-z\d\.]*\s)?([0-9]{4})\)",
+                              text)
+
+        #Books with complex pages
+        matches = re.finditer(r"(\d+[A-Z]?\s)?(([A-Z].)?\s?([A-Z][a-z]+,\s)?([A-Z].)?\s?([A-Z][a-z]+,\s)?([A-Z].)?\s?([A-Z][a-z]+)?,?\s&\s)?([A-Z].)?\s?([A-Z][a-z]+),\s([A-Za-z\d][\sA-Za-z:',]+?[A-Za-z\d])\s\\u00a7\s?([\d\:\.]+([\[\]A-Z\d]+)?),\s(?:\\u00b6\s?(\d+),\s)?(?:(?:pp\.)|(?:p\.))\s?(\d*\-?\d+)\s+?to\s+?(\d*\-?\d+)\s\(([A-Za-z\d][\sA-Za-z\d\.]*\s)?([0-9]{4})\)",
+                              text)
+
+        #Restatements, 1
+        matches = re.finditer(r"(\d+)?\s(Restatement\s[A-Za-z\s\(\)]+)\s(\\u00a7)?\s?(\d+[A-Z]?)\s\(([A-Za-z\d][\sA-Za-z\d\.]*\s)?([0-9]{4})\)",
+                              text)
+
+        #Restatements, 2
+        matches = re.finditer(r"(\d+)?\s?(Restatement\s[A-Za-z\s\(\)]+)\s(\\u00a7\s?\d+[A-Z]?)?(?:,\s(Comment\s[A-Za-z]))?(?:,\spp\.\s[\d]+(\-[\d]+)?\s)?\(([A-Za-z\d][\sA-Za-z\d\.]*\s)?([0-9]{4})\)",
+                              text)
+
+        # Restatements, 3
+        matches = re.finditer(
+            r"(\d+)?\s?(Restatement\s[A-Za-z\s\(\)]+)\s(\\u00a7\s?\d+[A-Z]?)?(?:,\s(Comment\s[A-Za-z]))?(?:,\spp\.\s[\d]+(\-[\d]+)?\s)?(,? and [A-Za-z\s'\d]+)?\(([A-Za-z\d][\sA-Za-z\d\.]*\s)?([0-9]{4})\)",
+            text)
+
+        #Restatements, 4
+        matches = re.finditer(r"(\d+)?\s?(Restatement\s[A-Za-z\s\(\)]+)\s(\\u00a7\s?\d+[A-Z\(\)\d]+)?(?:,\s(Comment\s[A-Za-z]))?(?:,\spp\.\s[\d]+(\-[\d]+)?\s)?\s?\(([A-Za-z\d][\sA-Za-z\d\.]*\s)?([0-9]{4})\)"
+                              , text)
+
+        #Restatements, 5
+        matches = re.finditer(r"(\d+)?\s?(Restatement\s[A-Za-z\s\(\)]+)\s(\\u00a7\\u00a7\s?\d+,\d+)?\s\(([A-Za-z\d][\sA-Za-z\d\.]*\s)?([0-9]{4})\)",
+                              text)
+
+        #Special books
+        matches = re.finditer(r"(\d+)?\s?([A-Z]\.)?\s?([A-Z][a-z]+),\s+([A-Za-z\s]+)(\*\d+((?:\-\*\d+)|(?:\s\\u2014\s\*\d+))?)  ", text)
+        if matches:
+            for match in matches:
+                author = [(match.group(3)),match.group(2)]
+                try:
+                    references.append(
+                        Reference(type="book", authors=author, volume=match.group(1), title=match.group(4),
+                                  pages=match.group(5), original_cite=match.string[match.start(1):match.end(5)]))
+                except InvalidCitationError:
+                    print("invalid citation!")
+                else:
+                    pass
+
+        #See generally books
+        matches= re.finditer(r"(\d+)?\s?([A-Z]\.)?\s?([A-Z][A-Za-z]+),\s+([A-Za-z\d][\sA-Za-z:',]+?[A-Za-z\d])\s+?\(([A-Za-z\d][\sA-Za-z\d\.]*\s)?([0-9]{4})\)",
+                             text)
+        if matches:
+            for match in matches:
+                author = [(match.group(3), match.group(2))]
+                try:
+                    references.append(
+                        Reference(type="book", authors=author, volume=match.group(1), title=match.group(4), edition=match.group(5),
+                                  date=match.group(6), original_cite=match.string[match.start(1):match.end(6)]))
+                except InvalidCitationError:
+                    print("invalid citation!")
+                else:
+                    pass
+
+        #See generally books, extended author
+        matches= re.finditer(r"(\d+)?\s?([A-Z][a-z]+\s[A-Z]\.)?\s?([A-Z][A-Za-z]+),\s+([A-Za-z\d][\sA-Za-z:',]+?[A-Za-z\d])\s+?\(([A-Za-z\d][\sA-Za-z\d\.]*\s)?([0-9]{4})\)",
+                             text)
+        if matches:
+            for match in matches:
+                author = [(match.group(3), match.group(2))]
+                try:
+                    references.append(
+                        Reference(type="book", authors=author, volume=match.group(1), title=match.group(4), edition=match.group(5),
+                                  date=match.group(6), original_cite=match.string[match.start(1):match.end(6)]))
+                except InvalidCitationError:
+                    print("invalid citation!")
+                else:
+                    pass
+
+        #No Author book
+        #[^\s].[;\.\"]\s*(?:(?:See)|(?:supra)|(?:see also))?,?\s+(\d+\s+)?([A-Za-z\d][\sA-Za-z:',]+?[A-Za-z\d])\s+?(\d*\-?\d+)\s+?\(([A-Za-z\d][\sA-Za-z\d\.]*\s)?([0-9]{4})\)
+        #todo: fix bug when multiple of these citations are in a row
+        matches = re.finditer(
+            r"(?<!\s[A-Z])[;\.\"]\s*(?:(?:See)|(?:supra)|(?:see also))?,?\s+(\d+\s+)?([A-Za-z\d][\sA-Za-z:',\/]+?[A-Za-z\d])\s+?(\d*\-?\d+)(,\s?\d+)?\s+?\(([A-Za-z\d][\sA-Za-z\d\.]*\s)?([0-9]{4})\)",
+            text)
+        if matches:
+            for match in matches:
+                try:
+                    references.append(
+                        Reference(type="book", volume=match.group(1), title=match.group(2), pages=match.group(3), edition=match.group(4),
+                                  date=match.group(5), original_cite=match.string[match.start(1):match.end(5)]))
+                except InvalidCitationError:
+                    print("invalid citation!")
+                else:
+                    pass
+
+        #books with sections
+        matches = re.finditer(
+            r"(\d+)\s+(?:([A-Za-z])?\.\s+?([A-Za-z]+?)\s+?\&\s+?)?([A-Za-z])?\.\s+?([A-Za-z]+?),\s+?([\sA-Za-z:',]+?)\s+?\\u00b6\s?(\d*\-?\d+)\s+?\(([\sA-Za-z\.\d]*\s)?([0-9]{3,4})\)", text)
+
+
