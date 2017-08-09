@@ -215,6 +215,8 @@ class Reference:
         pk1_file.close()
 
     def correct(self):
+        if "Dictionary" in self.title:
+            self.type = "Dictionary"
         if self.journal_title in ["N. Y. Times","N.Y. Times","New York Times"]:
             #todo: use NYT search api
             pass
@@ -283,7 +285,7 @@ def json_to_cluster(json_string):
         id_opin = parsed_json['id'] + "_" + str(opinion_count)
         opinions.append(Opinion(id=id_opin, name=name_short, opinion_text=parsed_json['opinion_text'+"_"+str(opinion_count)]))
         opinion_count = opinion_count + 1
-    cluster = OpinionCluster(id=id,opinions=opinions)
+    cluster = OpinionCluster(id=id,opinions=opinions, name=name_short)
     #cluster = OpinionCluster(id=id,court=court,jurisdiction=jurisdiction,docket=docket,date=date,name_full=name,
                             # name=name_short,cite=citation,opinions=opinions)
     return cluster
@@ -306,7 +308,7 @@ def find_potential_citations(opinion):
 #Returns a list of citations
 #Also saves new corresponding references to file
 #Currently looks for journal articles, newspapers, books, and similarly formatted citations
-def find_citations(opinion, as_citations=False):
+def find_citations(opinion, as_citations=False, testing=False):
 
     def create_citations(references, opinion):
         citations = []
@@ -329,6 +331,8 @@ def find_citations(opinion, as_citations=False):
         return references
 
     def find_books(text, opinion):
+        if testing:
+            print("Looking for Books")
         references = []
         rev_text = text[::-1]
 
@@ -411,9 +415,64 @@ def find_citations(opinion, as_citations=False):
                 references = append_reference(references=references, flag_error=print_errors, type=type, title=title, date=date,
                                               author=authors, volume=vol, full_cite=full, edition=edition, original_cite=original)
 
+        #Complex Pagination 1
+        matches = re.finditer(r"(\)(?:\.de )?(\d{3,4})\s*([^\(]*)\(\s*([\w\-\.]+\.[A-Z])\s+([\w\s':,]+[A-Z])\s*,([\w]+[A-Z])\s*(\.?[\w]*[A-Z]\s*(\.?[\w]*[A-Z])?)?\s*(?:(?:(?:&\s)|(?:dna\s)),?([\w]*[A-Z])\s*(\.?[\w]*[A-Z]\s*(\.?[\w]*[A-Z])?)?\s*)?(?:,([\w]*[A-Z])\s*(\.?[\w]*[A-Z]\s*(\.?[\w]*[A-Z])?\s*)?)?(?:,([\w]*[A-Z])\s*(\.?[\w]*[A-Z]\s*(\.?[\w]*[A-Z])?\s*)?)?(?:,([\w]*[A-Z])\s*(\.?[\w]*[A-Z]\s*(\.?[\w]*[A-Z])?\s*)?)?(?:,([\w]*[A-Z])\s*(\.?[\w]*[A-Z]\s*(\.?[\w]*[A-Z])?\s*)?)?(\d+)?)",
+                              rev_text)
+        for match in matches:
+            date = match.group(2)[::-1]
+
+            if match.group(7):
+                authors = [(match.group(6)[::-1], match.group(7)[::-1])]
+            else:
+                authors = [(match.group(6)[::-1], "")]
+            if match.group(9):
+                if match.group(10):
+                    authors = [(match.group(9)[::-1], match.group(10)[::-1])] + authors
+                else:
+                    authors = [(match.group(9)[::-1], "")] + authors
+            if match.group(12):
+                if match.group(13):
+                    authors = [(match.group(12)[::-1], match.group(13)[::-1])] + authors
+                else:
+                    authors = [(match.group(12)[::-1], "")] + authors
+            if match.group(15):
+                if match.group(16):
+                    authors = [(match.group(15)[::-1], match.group(16)[::-1])] + authors
+                else:
+                    authors = [(match.group(15)[::-1], "")] + authors
+            if match.group(18):
+                if match.group(19):
+                    authors = [(match.group(18)[::-1], match.group(19)[::-1])] + authors
+                else:
+                    authors = [(match.group(18)[::-1], "")] + authors
+            if match.group(21):
+                if match.group(22):
+                    authors = [(match.group(21)[::-1], match.group(22)[::-1])] + authors
+                else:
+                    authors = [(match.group(21)[::-1], "")] + authors
+
+            type = "book"
+            full = match.group(1)
+            original = match.group(1)[::-1]
+            vol = ""
+            if match.group(24):
+                vol = match.group(24)[::-1]
+            pages = ""
+            if match.group(4):
+                pages = match.group(4)[::-1]
+            title = match.group(5)[::-1]
+            edition = ""
+            if match.group(3):
+                edition = match.group(3)[::-1]
+            if testing:
+                print(original)
+            references = append_reference(references=references, flag_error=print_errors, type=type, title=title,
+                                          date=date,
+                                          author=authors, volume=vol, pages=pages, full_cite=full, edition=edition,
+                                          original_cite=original)
 
         #Basic Multivolume books
-        matches = re.finditer(r"(\)(?:\.de )?(\d{3,4})\s*([^\(]*)\(\s*((?:(?:\d+ ,)?(?:\d+ ,)?(?:\d+ ,)?\d+ \.nn?(?: dna)? ,)?(?:\d+(?:-\d+)?)?\s*(?:,\d+(?:-\d+)?)?\s*(?:,\d+(?:-\d+)?)?\s*(?:,\d+(?:-\d+)?)?\s*(?:,\d+(?:-\d+)?)?)\s+([\w\s':,]+[A-Z])\s*,([\w]+[A-Z])\s*(\.?[\w]*[A-Z]\s*(\.?[\w]*[A-Z])?)?\s*(?:(?:(?:&\s)|(?:dna\s)),?([\w]*[A-Z])\s*(\.?[\w]*[A-Z]\s*(\.?[\w]*[A-Z])?)?\s*)?(?:,([\w]*[A-Z])\s*(\.?[\w]*[A-Z]\s*(\.?[\w]*[A-Z])?\s*)?)?(?:,([\w]*[A-Z])\s*(\.?[\w]*[A-Z]\s*(\.?[\w]*[A-Z])?\s*)?)?(?:,([\w]*[A-Z])\s*(\.?[\w]*[A-Z]\s*(\.?[\w]*[A-Z])?\s*)?)?(?:,([\w]*[A-Z])\s*(\.?[\w]*[A-Z]\s*(\.?[\w]*[A-Z])?\s*)?)?(\d+)?)",
+        matches = re.finditer(r"(\)(?:\.de )?(\d{3,4})\s*([^\(]*)\(\s*((?:(?:\w+ ,)?(?:\w+ ,)?(?:\w+ ,)?\w+ \.nn?(?: dna)? ,)?(?:\d+(?:-\d+)?)?\s*(?:,\d+(?:-\d+)?)?\s*(?:,\d+(?:-\d+)?)?\s*(?:,\d+(?:-\d+)?)?\s*(?:,\d+(?:-\d+)?)?)\s+([\w\s':,]+[A-Z])\s*,([\w]+[A-Z])\s*(\.?[\w]*[A-Z]\s*(\.?[\w]*[A-Z])?)?\s*(?:(?:(?:&\s)|(?:dna\s)),?([\w]*[A-Z])\s*(\.?[\w]*[A-Z]\s*(\.?[\w]*[A-Z])?)?\s*)?(?:,([\w]*[A-Z])\s*(\.?[\w]*[A-Z]\s*(\.?[\w]*[A-Z])?\s*)?)?(?:,([\w]*[A-Z])\s*(\.?[\w]*[A-Z]\s*(\.?[\w]*[A-Z])?\s*)?)?(?:,([\w]*[A-Z])\s*(\.?[\w]*[A-Z]\s*(\.?[\w]*[A-Z])?\s*)?)?(?:,([\w]*[A-Z])\s*(\.?[\w]*[A-Z]\s*(\.?[\w]*[A-Z])?\s*)?)?(\d+)?)",
                               rev_text)
         if matches:
             for match in matches:
@@ -464,6 +523,398 @@ def find_citations(opinion, as_citations=False):
                     edition = match.group(3)[::-1]
                 references = append_reference(references=references, flag_error=print_errors, type=type, title=title, date=date,
                                               author=authors, volume=vol, pages=pages, full_cite=full, edition=edition, original_cite=original)
+
+        #Book with sections
+        matches = re.finditer(r"(\)(?:\.de )?(\d{3,4})\s*([^\(]*)\( ((?:\d+ .nn? ?(?:dna )?,)?(?:(?:(?:\d+ )?seton dna ,)?[\d\.-]+ (?:ot [\d\.-]+ )?.p?p ,)?(?:[\w'\.\[\]]+ ?¶ )?(?:\d+ ,)?(?:\d+ ,)?(?:\d+ ,)?(?:\d+ ,)?(?:\d+ ,)?(?:,?[\w\-\:\.\[\]\(\)]+ ?§§?)(?: ?,\d+ \.hc)?)\s*([\w\s':,]+[A-Z])\s*,([\w]+[A-Z0-9])\s*(\.?[\w]*[A-Z]\s*(\.?[\w]*[A-Z])?)?\s*(?:(?:(?:&\s)|(?:dna\s)),?([\w]*[A-Z])\s*(\.?[\w]*[A-Z]\s*(\.?[\w]*[A-Z])?)?\s*)?(?:,([\w]*[A-Z])\s*(\.?[\w]*[A-Z]\s*(\.?[\w]*[A-Z])?\s*)?)?(?:,([\w]*[A-Z])\s*(\.?[\w]*[A-Z]\s*(\.?[\w]*[A-Z])?\s*)?)?(?:,([\w]*[A-Z])\s*(\.?[\w]*[A-Z]\s*(\.?[\w]*[A-Z])?\s*)?)?(?:,([\w]*[A-Z])\s*(\.?[\w]*[A-Z]\s*(\.?[\w]*[A-Z])?\s*)?)?(\d+)?)",
+                              rev_text)
+        if matches:
+            for match in matches:
+                date = match.group(2)[::-1]
+
+                if match.group(7):
+                    authors = [(match.group(6)[::-1], match.group(7)[::-1])]
+                else:
+                    authors = [(match.group(6)[::-1], "")]
+                if match.group(9):
+                    if match.group(10):
+                        authors = [(match.group(9)[::-1], match.group(10)[::-1])] + authors
+                    else:
+                        authors = [(match.group(9)[::-1], "")] + authors
+                if match.group(12):
+                    if match.group(13):
+                        authors = [(match.group(12)[::-1], match.group(13)[::-1])] + authors
+                    else:
+                        authors = [(match.group(12)[::-1], "")] + authors
+                if match.group(15):
+                    if match.group(16):
+                        authors = [(match.group(15)[::-1], match.group(16)[::-1])] + authors
+                    else:
+                        authors = [(match.group(15)[::-1], "")] + authors
+                if match.group(18):
+                    if match.group(19):
+                        authors = [(match.group(18)[::-1], match.group(19)[::-1])] + authors
+                    else:
+                        authors = [(match.group(18)[::-1], "")] + authors
+                if match.group(21):
+                    if match.group(22):
+                        authors = [(match.group(21)[::-1], match.group(22)[::-1])] + authors
+                    else:
+                        authors = [(match.group(21)[::-1], "")] + authors
+
+                type = "book"
+                full = match.group(1)
+                original = match.group(1)[::-1]
+                vol = ""
+                if match.group(24):
+                    vol = match.group(24)[::-1]
+                pages = ""
+                if match.group(4):
+                    pages = match.group(4)[::-1]
+                title = match.group(5)[::-1]
+                edition = ""
+                if match.group(3):
+                    edition = match.group(3)[::-1]
+                references = append_reference(references=references, flag_error=print_errors, type=type, title=title,
+                                              date=date,
+                                              author=authors, volume=vol, pages=pages, full_cite=full, edition=edition,
+                                              original_cite=original)
+
+        #Books with Paragraphs
+        matches = re.finditer(r"(\)(?:\.de )?(\d{3,4})\s*([^\(]*)\( ((?:\w+ .nn? ?(?:dna )?,)?(?:(?:(?:\d+ )?seton dna ,)?[\d\.-]+ (?:ot [\d\.-]+ )?.p?p ,)?(?:[\w'\.\[\]]+ ?¶ ?)(?:-\d+)?(?: ?,\d+ \.hc)?)\s*([\w\s':,]+[A-Z])\s*,([\w]+[A-Z0-9])\s*(\.?[\w]*[A-Z]\s*(\.?[\w]*[A-Z])?)?\s*(?:(?:(?:&\s)|(?:dna\s)),?([\w]*[A-Z])\s*(\.?[\w]*[A-Z]\s*(\.?[\w]*[A-Z])?)?\s*)?(?:,([\w]*[A-Z])\s*(\.?[\w]*[A-Z]\s*(\.?[\w]*[A-Z])?\s*)?)?(?:,([\w]*[A-Z])\s*(\.?[\w]*[A-Z]\s*(\.?[\w]*[A-Z])?\s*)?)?(?:,([\w]*[A-Z])\s*(\.?[\w]*[A-Z]\s*(\.?[\w]*[A-Z])?\s*)?)?(?:,([\w]*[A-Z])\s*(\.?[\w]*[A-Z]\s*(\.?[\w]*[A-Z])?\s*)?)?(\d+)?)",
+                              rev_text)
+        if matches:
+            for match in matches:
+                date = match.group(2)[::-1]
+
+                if match.group(7):
+                    authors = [(match.group(6)[::-1], match.group(7)[::-1])]
+                else:
+                    authors = [(match.group(6)[::-1], "")]
+                if match.group(9):
+                    if match.group(10):
+                        authors = [(match.group(9)[::-1], match.group(10)[::-1])] + authors
+                    else:
+                        authors = [(match.group(9)[::-1], "")] + authors
+                if match.group(12):
+                    if match.group(13):
+                        authors = [(match.group(12)[::-1], match.group(13)[::-1])] + authors
+                    else:
+                        authors = [(match.group(12)[::-1], "")] + authors
+                if match.group(15):
+                    if match.group(16):
+                        authors = [(match.group(15)[::-1], match.group(16)[::-1])] + authors
+                    else:
+                        authors = [(match.group(15)[::-1], "")] + authors
+                if match.group(18):
+                    if match.group(19):
+                        authors = [(match.group(18)[::-1], match.group(19)[::-1])] + authors
+                    else:
+                        authors = [(match.group(18)[::-1], "")] + authors
+                if match.group(21):
+                    if match.group(22):
+                        authors = [(match.group(21)[::-1], match.group(22)[::-1])] + authors
+                    else:
+                        authors = [(match.group(21)[::-1], "")] + authors
+
+                type = "book"
+                full = match.group(1)
+                original = match.group(1)[::-1]
+                vol = ""
+                if match.group(24):
+                    vol = match.group(24)[::-1]
+                pages = ""
+                if match.group(4):
+                    pages = match.group(4)[::-1]
+                title = match.group(5)[::-1]
+                edition = ""
+                if match.group(3):
+                    edition = match.group(3)[::-1]
+                references = append_reference(references=references, flag_error=print_errors, type=type, title=title,
+                                              date=date,
+                                              author=authors, volume=vol, pages=pages, full_cite=full, edition=edition,
+                                              original_cite=original)
+
+        #No author books with sections
+        matches = re.finditer(r"(\)(?:\.de )?(\d{3,4})\s*([^\(]*)\( ((?:\d+ .nn? ?(?:dna )?,)?(?:(?:(?:\d+ )?seton dna ,)?[\d\.-]+ (?:ot [\d\.-]+ )?.p?p ,)?(?:[\w'\.\[\]]+ ?¶ )?(?:\d+ ,)?(?:\d+ ,)?(?:\d+ ,)?(?:\d+ ,)?(?:\d+ ,)?(?:,?[\w\-\:\.\[\]\(\)]+ ?§§?)(?: ?,\d+ \.hc)?)\s*([\w\s':,]+[A-Z])\s?(?:(?:[.;\"])|ee[Ss]|arpu[Ss]|osla ee[Ss]|eht ni|eht htiw)(?!([a-z]{1,2})?[A-Z])(?![A-Za-z]+\s\d))", rev_text)
+        if matches:
+            for match in matches:
+                full = match.group(1)
+                original = match.group(1)[::-1]
+                date = match.group(2)[::-1]
+                type="book"
+                author=[("no_author","")]
+                title = match.group(5)[::-1]
+                vol = ""
+                if match.group(6):
+                    vol = match.group(6)[::-1]
+                pages = ""
+                if match.group(4):
+                    pages = match.group(4)[::-1]
+                edition = ""
+                if match.group(3):
+                    edition = match.group(3)[::-1]
+
+                references = append_reference(references=references, flag_error=print_errors, type=type, title=title, date=date,
+                                              author=author, volume=vol, pages=pages, full_cite=full, edition=edition, original_cite=original)
+
+        #No author book with paragraphs
+        matches = re.finditer(r"(\)(?:\.de )?(\d{3,4})\s*([^\(]*)\( ((?:\w+ .nn? ?(?:dna )?,)?(?:(?:(?:\d+ )?seton dna ,)?[\d\.-]+ (?:ot [\d\.-]+ )?.p?p ,)?(?:[\w'\.\[\]]+ ?¶ ?)(?:-\d+)?(?: ?,\d+ \.hc)?)\s*([\w\s':,]+[A-Z]) (\d+)?)\s?(?:(?:[.;\"])|ee[Ss]|arpu[Ss]|osla ee[Ss]|eht ni|eht htiw)(?!([a-z]{1,2})?[A-Z])(?![A-Za-z]+\s\d)", rev_text)
+        if matches:
+            for match in matches:
+                full = match.group(1)
+                original = match.group(1)[::-1]
+                date = match.group(2)[::-1]
+                type="book"
+                author=[("no_author","")]
+                title = match.group(5)[::-1]
+                vol = ""
+                if match.group(6):
+                    vol = match.group(6)[::-1]
+                pages = ""
+                if match.group(4):
+                    pages = match.group(4)[::-1]
+                edition = ""
+                if match.group(3):
+                    edition = match.group(3)[::-1]
+
+                references = append_reference(references=references, flag_error=print_errors, type=type, title=title, date=date,
+                                              author=author, volume=vol, pages=pages, full_cite=full, edition=edition, original_cite=original)
+
+        #Books with 'pp.'s
+        matches = re.finditer(r"(\)(?:\.de )?(\d{3,4})\s*([^\(]*)\(\s*((?:(?:\w+ ,)?(?:\w+ ,)?(?:\w+ ,)?\w+ \.nn?(?: dna)? ,)?(?:\d+(?:-\d+)?)?\s*(?:,\d+(?:-\d+)?)?\s*(?:,\d+(?:-\d+)?)?\s*(?:,\d+(?:-\d+)?)?\s*(?:,\d+(?:-\d+)?)?\s+.p?p\s,)([\w\s':,\.-]+[A-Z])\s*,([\w]+[A-Z])\s*(\.?[\w]*[A-Z]\s*(\.?[\w]*[A-Z])?)?\s*(?:(?:(?:&\s)|(?:dna\s)),?([\w]*[A-Z])\s*(\.?[\w]*[A-Z]\s*(\.?[\w]*[A-Z])?)?\s*)?(?:,([\w]*[A-Z])\s*(\.?[\w]*[A-Z]\s*(\.?[\w]*[A-Z])?\s*)?)?(?:,([\w]*[A-Z])\s*(\.?[\w]*[A-Z]\s*(\.?[\w]*[A-Z])?\s*)?)?(?:,([\w]*[A-Z])\s*(\.?[\w]*[A-Z]\s*(\.?[\w]*[A-Z])?\s*)?)?(?:,([\w]*[A-Z])\s*(\.?[\w]*[A-Z]\s*(\.?[\w]*[A-Z])?\s*)?)?(\d+)?)", rev_text)
+        if matches:
+            for match in matches:
+                date = match.group(2)[::-1]
+
+                if match.group(7):
+                    authors = [(match.group(6)[::-1],match.group(7)[::-1])]
+                else:
+                    authors = [(match.group(6)[::-1],"")]
+                if match.group(9):
+                    if match.group(10):
+                        authors = [(match.group(9)[::-1], match.group(10)[::-1])] + authors
+                    else:
+                        authors = [(match.group(9)[::-1],"")] + authors
+                if match.group(12):
+                    if match.group(13):
+                        authors = [(match.group(12)[::-1], match.group(13)[::-1])] + authors
+                    else:
+                        authors = [(match.group(12)[::-1],"")] + authors
+                if match.group(15):
+                    if match.group(16):
+                        authors = [(match.group(15)[::-1], match.group(16)[::-1])] + authors
+                    else:
+                        authors = [(match.group(15)[::-1],"")] + authors
+                if match.group(18):
+                    if match.group(19):
+                        authors = [(match.group(18)[::-1], match.group(19)[::-1])] + authors
+                    else:
+                        authors = [(match.group(18)[::-1],"")] + authors
+                if match.group(21):
+                    if match.group(22):
+                        authors = [(match.group(21)[::-1], match.group(22)[::-1])] + authors
+                    else:
+                        authors = [(match.group(21)[::-1],"")] + authors
+
+                type = "book"
+                full = match.group(1)
+                original = match.group(1)[::-1]
+                vol = ""
+                if match.group(24):
+                    vol = match.group(24)[::-1]
+                pages = ""
+                if match.group(4):
+                    pages = match.group(4)[::-1]
+                title = match.group(5)[::-1]
+                edition = ""
+                if match.group(3):
+                    edition = match.group(3)[::-1]
+                #if testing:
+                #    print(original)
+                references = append_reference(references=references, flag_error=print_errors, type=type, title=title, date=date,
+                                              author=authors, volume=vol, pages=pages, full_cite=full, edition=edition, original_cite=original)
+
+        #Books with chapters
+        matches = re.finditer(r"(\)(?:\.de )?(\d{3,4})\s*([^\(]*)\(\s*(?:([\d-]+ .p?p ,)?[\w]+ .hc ,)([\w\s':,\.]+[A-Z0-9])\s*,(([\w]+[A-Z])\s*([\.\s\w]*[A-Z])?)?\s*(?:(?:(?:&\s)|(?:dna\s)),?([\w]*[A-Z])\s*(\.?[\w]*[A-Z]\s*(\.?[\w]*[A-Z])?)?\s*)?(?:,([\w]*[A-Z])\s*(\.?[\w]*[A-Z]\s*(\.?[\w]*[A-Z])?\s*)?)?(?:,([\w]*[A-Z])\s*(\.?[\w]*[A-Z]\s*(\.?[\w]*[A-Z])?\s*)?)?(?:,([\w]*[A-Z])\s*(\.?[\w]*[A-Z]\s*(\.?[\w]*[A-Z])?\s*)?)?(?:,([\w]*[A-Z])\s*(\.?[\w]*[A-Z]\s*(\.?[\w]*[A-Z])?\s*)?)?(\d+)?)",
+                            rev_text)
+        for match in matches:
+            date = match.group(2)[::-1]
+            if match.group(8):
+                authors = [(match.group(7)[::-1], match.group(8)[::-1])]
+            else:
+                authors = [(match.group(7)[::-1], "")]
+            if match.group(11):
+                if match.group(10):
+                    authors = [(match.group(10)[::-1], match.group(11)[::-1])] + authors
+                else:
+                    authors = [(match.group(10)[::-1], "")] + authors
+            if match.group(14):
+                if match.group(13):
+                    authors = [(match.group(13)[::-1], match.group(14)[::-1])] + authors
+                else:
+                    authors = [(match.group(13)[::-1], "")] + authors
+            if match.group(17):
+                if match.group(16):
+                    authors = [(match.group(16)[::-1], match.group(17)[::-1])] + authors
+                else:
+                    authors = [(match.group(16)[::-1], "")] + authors
+            if match.group(20):
+                if match.group(19):
+                    authors = [(match.group(19)[::-1], match.group(20)[::-1])] + authors
+                else:
+                    authors = [(match.group(19)[::-1], "")] + authors
+            if match.group(23):
+                if match.group(23):
+                    authors = [(match.group(22)[::-1], match.group(23)[::-1])] + authors
+                else:
+                    authors = [(match.group(22)[::-1], "")] + authors
+
+            type = "book"
+            full = match.group(1)
+            original = match.group(1)[::-1]
+            vol = ""
+            if match.group(24):
+                vol = match.group(24)[::-1]
+            pages = ""
+            if match.group(4):
+                pages = match.group(4)[::-1]
+            title = match.group(5)[::-1]
+            edition = ""
+            if match.group(3):
+                edition = match.group(3)[::-1]
+            #if testing:
+                #print(original)
+            references = append_reference(references=references, flag_error=print_errors, type=type, title=title,
+                                          date=date,
+                                          author=authors, volume=vol, pages=pages, full_cite=full, edition=edition,
+                                          original_cite=original)
+        
+        #Book Section
+        hereinafters = re.finditer(r"(, in ([,A-Za-z\s]+) ([\s\d,-]+) \(([\sA-Za-z\.\d&,]*?)([0-9]{4})\) \(hereinafter ([\w\s]+)\))", text)
+        herein = {}
+        for hereinafter in hereinafters:
+            author = [("No_Author (Edited Volume)",)]
+            type="Book"
+            full = match.group(1)
+            original = match.group(1)
+            date = match.group(5)
+            edition = ""
+            title = match.group(2)
+            pages = match.group(3)
+            if match.group(4):
+                edition = match.group(4)
+            herein.append[match.group(5)[::-1]] = [title, edition, date]
+            if testing:
+                print(original)
+            references = append_reference(references=references, flag_error=print_errors, type=type, title=title, date=date,
+                                      author=author, full_cite=full, edition=edition,
+                                      original_cite=original)
+
+        matches = re.finditer(r"(\)(?:\.de )?(\d{3,4})\s*([^\(]*)\(\s*((?:(?:\w+ ,)?(?:\w+ ,)?(?:\w+ ,)?\w+ \.nn?(?: dna)? ,)?(?:\d+(?:-\d+)?)?\s*(?:,\d+(?:-\d+)?)?\s*(?:,\d+(?:-\d+)?)?\s*(?:,\d+(?:-\d+)?)?\s*(?:,\d+(?:-\d+)?)?)\s+([\.\w\s':,]+[A-Z]) ni ,([\.\w\s':,]+[A-Z])\s*,([\w]+[A-Z])\s*(\.?[\w]*[A-Z]\s*(\.?[\w]*[A-Z])?)?\s*(?:(?:(?:&\s)|(?:dna\s)),?([\w]*[A-Z])\s*(\.?[\w]*[A-Z]\s*(\.?[\w]*[A-Z])?)?\s*)?(?:,([\w]*[A-Z])\s*(\.?[\w]*[A-Z]\s*(\.?[\w]*[A-Z])?\s*)?)?(?:,([\w]*[A-Z])\s*(\.?[\w]*[A-Z]\s*(\.?[\w]*[A-Z])?\s*)?)?(?:,([\w]*[A-Z])\s*(\.?[\w]*[A-Z]\s*(\.?[\w]*[A-Z])?\s*)?)?(?:,([\w]*[A-Z])\s*(\.?[\w]*[A-Z]\s*(\.?[\w]*[A-Z])?\s*)?)?(\d+)?)",
+                              rev_text)
+        for match in matches:
+            type="Book Section"
+            full = match.group(1)
+            original = match.group(1)[::-1]
+            pages = match.group(4)[::-1]
+            title = match.group(6)[::-1]
+            edition = ""
+            volume_title = match.group(5)[::-1]
+            date = match.group(2)[::-1]
+            vol = ""
+            if match.group(25):
+                vol = match.group(25)[::-1]
+            if match.group(3):
+                edition = match.group(3)[::-1]
+            if match.group(8):
+                authors = [(match.group(7)[::-1], match.group(8)[::-1])]
+            else:
+                authors = [(match.group(7)[::-1], "")]
+            if match.group(11):
+                if match.group(10):
+                    authors = [(match.group(10)[::-1], match.group(11)[::-1])] + authors
+                else:
+                    authors = [(match.group(10)[::-1], "")] + authors
+            if match.group(14):
+                if match.group(13):
+                    authors = [(match.group(13)[::-1], match.group(14)[::-1])] + authors
+                else:
+                    authors = [(match.group(13)[::-1], "")] + authors
+            if match.group(17):
+                if match.group(16):
+                    authors = [(match.group(16)[::-1], match.group(17)[::-1])] + authors
+                else:
+                    authors = [(match.group(16)[::-1], "")] + authors
+            if match.group(20):
+                if match.group(19):
+                    authors = [(match.group(19)[::-1], match.group(20)[::-1])] + authors
+                else:
+                    authors = [(match.group(19)[::-1], "")] + authors
+            if match.group(23):
+                if match.group(23):
+                    authors = [(match.group(22)[::-1], match.group(23)[::-1])] + authors
+                else:
+                    authors = [(match.group(22)[::-1], "")] + authors
+            if testing:
+                print(original)
+            references = append_reference(references=references, flag_error=print_errors, type=type, title=title,
+                                              date=date, volume_title=volume_title, volume=vol, pages=pages,
+                                              author=authors, full_cite=full, edition=edition,
+                                              original_cite=original)
+        matches = re.finditer(r"(((?:(?:\w+ ,)?(?:\w+ ,)?(?:\w+ ,)?\w+ \.nn?(?: dna)? ,)?(?:\d+(?:-\d+)?)?\s*(?:,\d+(?:-\d+)?)?\s*(?:,\d+(?:-\d+)?)?\s*(?:,\d+(?:-\d+)?)?\s*(?:,\d+(?:-\d+)?)?)\s+([\.\w\s':,]+[A-Z]) ni ([\.\w\s':,]+[A-Z])\s*,([\w]+[A-Z])\s*(\.?[\w]*[A-Z]\s*(\.?[\w]*[A-Z])?)?\s*(?:(?:(?:&\s)|(?:dna\s)),?([\w]*[A-Z])\s*(\.?[\w]*[A-Z]\s*(\.?[\w]*[A-Z])?)?\s*)?(?:,([\w]*[A-Z])\s*(\.?[\w]*[A-Z]\s*(\.?[\w]*[A-Z])?\s*)?)?(?:,([\w]*[A-Z])\s*(\.?[\w]*[A-Z]\s*(\.?[\w]*[A-Z])?\s*)?)?(?:,([\w]*[A-Z])\s*(\.?[\w]*[A-Z]\s*(\.?[\w]*[A-Z])?\s*)?)?(?:,([\w]*[A-Z])\s*(\.?[\w]*[A-Z]\s*(\.?[\w]*[A-Z])?\s*)?)?(\d+)?)",
+                              rev_text)
+        for match in matches:
+            if match.group(3) in herein:
+                herein.append[match.group(3)[::-1]] = [title, edition, date]
+
+                type = "Book Section"
+                full = match.group(1)
+                original = match.group(1)[::-1]
+                pages = match.group(2)[::-1]
+                title = match.group(4)[::-1]
+                edition = herein[match.group(3)][1]
+                volume_title = herein[match.group(3)][0]
+                date = herein[match.group(3)][2]
+                vol = ""
+                if match.group(23):
+                    vol = match.group(23)[::-1]
+                if match.group(6):
+                    authors = [(match.group(5)[::-1], match.group(6)[::-1])]
+                else:
+                    authors = [(match.group(5)[::-1], "")]
+                if match.group(8):
+                    if match.group(9):
+                        authors = [(match.group(8)[::-1], match.group(9)[::-1])] + authors
+                    else:
+                        authors = [(match.group(8)[::-1], "")] + authors
+                if match.group(11):
+                    if match.group(12):
+                        authors = [(match.group(11)[::-1], match.group(12)[::-1])] + authors
+                    else:
+                        authors = [(match.group(11)[::-1], "")] + authors
+                if match.group(14):
+                    if match.group(15):
+                        authors = [(match.group(14)[::-1], match.group(15)[::-1])] + authors
+                    else:
+                        authors = [(match.group(14)[::-1], "")] + authors
+                if match.group(17):
+                    if match.group(18):
+                        authors = [(match.group(17)[::-1], match.group(18)[::-1])] + authors
+                    else:
+                        authors = [(match.group(17)[::-1], "")] + authors
+                if match.group(20):
+                    if match.group(21):
+                        authors = [(match.group(20)[::-1], match.group(21)[::-1])] + authors
+                    else:
+                        authors = [(match.group(20)[::-1], "")] + authors
+                if testing:
+                    print(original)
+                    print(herein)
+                references = append_reference(references=references, flag_error=print_errors, type=type, title=title,
+                                              date=date, volume_title=volume_title, volume=vol, pages=pages,
+                                              author=authors, full_cite=full, edition=edition,
+                                              original_cite=original)
+        
         #No author general books
         matches = re.finditer(r"(\)(?:\.de )?(\d{3,4})\s*([^\(]*)\(\s+([a-z][\w\s':]+[A-Z])\s?(\d+)?)\s?(?:(?:[.;\"])|ee[Ss]|arpu[Ss]|osla ee[Ss]|eht ni|eht htiw)(?!([a-z]{1,2})?[A-Z])(?![A-Za-z]+\s\d)",
                               rev_text)
@@ -516,7 +967,7 @@ def find_citations(opinion, as_citations=False):
                 original = match.group(1)[::-1]
                 date = match.group(2)[::-1]
                 type = "Instituional Report"
-                author_temp = match.group(6)
+                author_temp = match.group(6)[::-1]
                 if author_temp.strip().endswith(" eeS"):
                     author_temp = author_temp.strip()
                     author_temp = author_temp.rstrip("Se ")
@@ -562,43 +1013,52 @@ def find_citations(opinion, as_citations=False):
         return create_citations(references,opinion)
 
     def find_news(text, opinion):
+        if testing:
+            print("Looking for News")
         references = []
 
-        matches = re.finditer(r"((?:([A-Z]\w+), )?([\w\s'’–]+?(?:,|\?) )?((?:[A-Z][\w\.]+\s?)+), ((?:[\w]{3,4}.? \d+-)?[\w]{3,4}.? \d+, \d{4})(, pp?\. [A-Z]\w+(?:\s\d+)?)?)", text)
-        if matches:
-            for match in matches:
-                full = match.group(1)
-                original = match.group(1)
-                pages = "not_specified"
-                if match.group(6):
-                    pages = match.group(6)
-                if match.group(3):
-                    title = match.group(3).strip()
-                else:
-                    title = "untitled (" + pages + ")"
-                vol = match.group(4)
-                date = match.group(5)
-                type = "book"
-                if match.group(2):
-                    author = [(match.group(2),"")]
-                else:
-                    author_temp = "no_author_(" + vol +  ")"
-                    author = [(author_temp,"")]
-                references = append_reference(references=references, flag_error=print_errors, type=type,
-                                              title=title, date=date,
-                                              author=author, volume_title=vol, full_cite=full, original_cite=original)
-
+        matches = re.finditer(r"((?:([A-Z]\w+), )?([\w\s'’–]+?(?:[,?]) )?((?:[A-Z][\w\.]+\s?)+), ((?:[\w]{3,4}.? \d+-)?[\w]{3,4}.? \d+, \d{4})(, pp?\. [A-Z]\w+(?:\s\d+)?)?)", text)
+        if testing:
+            print("search complete")
+        for match in matches:
+            print(match)
+            if testing:
+                print(match)
+                print("New News Match!")
+            full = match.group(1)
+            original = match.group(1)
+            pages = "not_specified"
+            if match.group(6):
+                pages = match.group(6)
+            if match.group(3):
+                title = match.group(3).strip()
+            else:
+                title = "untitled (" + pages + ")"
+            vol = match.group(4)
+            date = match.group(5)
+            type = "book"
+            if match.group(2):
+                author = [(match.group(2),"")]
+            else:
+                author_temp = "no_author_(" + vol +  ")"
+                author = [(author_temp,"")]
+            references = append_reference(references=references, flag_error=print_errors, type=type,
+                                          title=title, date=date,
+                                          author=author, volume_title=vol, full_cite=full, original_cite=original)
+        if testing:
+            print("done with matches")
         return create_citations(references, opinion)
 
     def find_journals(text, opinion):
+        if testing:
+            print("Looking for Journals")
         references=[]
         rev_txt = text[::-1]
 
-        matches = re.finditer(r"(\)(\d{3,4})\s*([^\(]*)\(\s*?((?:(?:\d+ ,)?(?:\d+ ,)?(?:\d+ ,)?\d+ \.nn?(?: dna)? ,)?(?:\d+(?:-\d+)?)?\s*(?:,\d+(?:-\d+)?)?\s*(?:,\d+(?:-\d+)?)?\s*(?:,\d+(?:-\d+)?)?\s*(?:,\d+(?:-\d+)?)?\s*,)?(\d+)\s*([\w\s':,\.\"?!&]+[A-Z])\s*(\d+)\s*,([\w\s':,\"\\\.\u2014?!]+[A-Z\"])\s*,([\w]+[A-Z])\s*(\.?[\w]*[A-Z]\s*(\.?[\w]*[A-Z])?)?\s*(?:(?:(?:&\s)|(?:dna\s)),?([\w]*[A-Z])\s*(\.?[\w]*[A-Z]\s*(\.?[\w]*[A-Z])?)?\s*)?(?:,([\w]*[A-Z])\s*(\.?[\w]*[A-Z]\s*(\.?[\w]*[A-Z])?\s*)?)?(?:,([\w]*[A-Z])\s*(\.?[\w]*[A-Z]\s*(\.?[\w]*[A-Z])?\s*)?)?(?:,([\w]*[A-Z])\s*(\.?[\w]*[A-Z]\s*(\.?[\w]*[A-Z])?\s*)?)?(?:,([\w]*[A-Z])\s*(\.?[\w]*[A-Z]\s*(\.?[\w]*[A-Z])?\s*)?)?)",
+        matches = re.finditer(r"(\)(\d{3,4})\s*([^\(]*)\(\s*?((?:(?:\d+ ,)?(?:\d+ ,)?(?:\d+ ,)?\d+ \.nn?(?: dna)? ,)?(?:\d+(?:-\d+)?)?\s*(?:,\d+(?:-\d+)?)?\s*(?:,\d+(?:-\d+)?)?\s*(?:,\d+(?:-\d+)?)?\s*(?:,\d+(?:-\d+)?)?\s*,)?(\d+)\s*([\w\s':,\.\"\(\)?!&]+[A-Z])\s*(\d+)\s*,([\w\s':,\"\\\.?!\u2014]+[A-Z\"])\s*,([\w]+[A-Z])\s*(\.?[\w]*[A-Z]\s*(\.?[\w]*[A-Z])?)?\s*(?:(?:(?:&\s)|(?:dna\s)),?([\w]*[A-Z])\s*(\.?[\w]*[A-Z]\s*(\.?[\w]*[A-Z])?)?\s*)?(?:,([\w]*[A-Z])\s*(\.?[\w]*[A-Z]\s*(\.?[\w]*[A-Z])?\s*)?)?(?:,([\w]*[A-Z])\s*(\.?[\w]*[A-Z]\s*(\.?[\w]*[A-Z])?\s*)?)?(?:,([\w]*[A-Z])\s*(\.?[\w]*[A-Z]\s*(\.?[\w]*[A-Z])?\s*)?)?(?:,([\w]*[A-Z])\s*(\.?[\w]*[A-Z]\s*(\.?[\w]*[A-Z])?\s*)?)?)",
                               rev_txt)
         if matches:
             for match in matches:
-
                 type = "journal"
                 full = match.group(1)
                 original = match.group(1)[::-1]
@@ -649,9 +1109,142 @@ def find_citations(opinion, as_citations=False):
                                               author=authors, volume=vol, pages=pages, full_cite=full, edition=edition,
                                               original_cite=original)
 
+            #Year as volume
+            matches = re.finditer(r"([;.,](\d+(?:(?:(?:\d+ ,)?(?:\d+ ,)?(?:\d+ ,)?\d+ \.nn?(?: dna)? ,)?(?:\d+(?:-\d+)?)?\s*(?:,\d+(?:-\d+)?)?\s*(?:,\d+(?:-\d+)?)?\s*(?:,\d+(?:-\d+)?)?\s*(?:,\d+(?:-\d+)?)?)) ([.\w\s]+) (\d{4}) ,([\w\s:]+) ,([\w]+[A-Z])\s*(\.?[\w]*[A-Z]\s*(\.?[\w]*[A-Z])?)?\s*(?:(?:(?:&\s)|(?:dna\s)),?([\w]*[A-Z])\s*(\.?[\w]*[A-Z]\s*(\.?[\w]*[A-Z])?)?\s*)?(?:,([\w]*[A-Z])\s*(\.?[\w]*[A-Z]\s*(\.?[\w]*[A-Z])?\s*)?)?(?:,([\w]*[A-Z])\s*(\.?[\w]*[A-Z]\s*(\.?[\w]*[A-Z])?\s*)?)?(?:,([\w]*[A-Z])\s*(\.?[\w]*[A-Z]\s*(\.?[\w]*[A-Z])?\s*)?)?(?:,([\w]*[A-Z])\s*(\.?[\w]*[A-Z]\s*(\.?[\w]*[A-Z])?\s*)?)?)",
+                                  rev_txt)
+            if matches:
+                for match in matches:
+                    type = "Journal"
+                    full = match.group(1)
+                    original = match.group(1)[::-1]
+                    date = match.group(4)[::-1]
+                    start_page = match.group(2)[::-1]
+                    vol = match.group(4)[::-1]
+                    title = match.group(5)[::-1]
+                    journal_title = match.group(3)[::-1]
+                    if match.group(7):
+                        authors = [(match.group(6)[::-1], match.group(7)[::-1])]
+                    else:
+                        authors = [(match.group(6)[::-1], "")]
+                    if match.group(10):
+                        if match.group(11):
+                            authors = [(match.group(10)[::-1], match.group(11)[::-1])] + authors
+                        else:
+                            authors = [(match.group(10)[::-1], "")] + authors
+                    if match.group(13):
+                        if match.group(14):
+                            authors = [(match.group(13)[::-1], match.group(14)[::-1])] + authors
+                        else:
+                            authors = [(match.group(13)[::-1], "")] + authors
+                    if match.group(16):
+                        if match.group(17):
+                            authors = [(match.group(16)[::-1], match.group(17)[::-1])] + authors
+                        else:
+                            authors = [(match.group(16)[::-1], "")] + authors
+                    if match.group(19):
+                        if match.group(20):
+                            authors = [(match.group(19)[::-1], match.group(20)[::-1])] + authors
+                        else:
+                            authors = [(match.group(19)[::-1], "")] + authors
+                    if match.group(22):
+                        if match.group(23):
+                            authors = [(match.group(22)[::-1], match.group(23)[::-1])] + authors
+                        else:
+                            authors = [(match.group(22)[::-1], "")] + authors
+                    references = append_reference(references=references, flag_error=print_errors, type=type, title=title,
+                                              date=date, start_page=start_page, journal_title=journal_title,
+                                              author=authors, volume=vol, pages=pages, full_cite=full,
+                                              original_cite=original)
+
+            #Harvard Law Supreme Court Term
+            matches = re.finditer(r"((The Supreme Court, \d+ Term), (\d+) Harv. L. Rev. (\d+), ([\w\s,-]+) \((\d+)\))", text)
+            for match in matches:
+                type = "jorunal"
+                full = match.group(1)
+                original = match.group(1)
+                date = match.group(6)
+                author = [("No_Author","")]
+                title = match.group(2)
+                vol = match.group(3)
+                start_page = match.group(4)
+                pages = match.group(5)
+                journal_title = "Harvard Law Review"
+                references = append_reference(references=references, flag_error=print_errors, type=type,
+                                          title=title, pages=pages,
+                                          date=date, start_page=start_page, journal_title=journal_title,
+                                          author=author, volume=vol, full_cite=full,
+                                          original_cite=original)
+
+            #Special Case
+            matches = re.finditer(r"([;.](\d+) ([\w\s.]+) (\d{4}) ,([\w\s]+)\s?(?:(?:[.;\"])|ee[Ss]|arpu[Ss]|osla ee[Ss]|eht ni|eht htiw)(?!([a-z]{1,2})?[A-Z])(?![A-Za-z]+\s\d))",
+                                  rev_txt)
+            if matches:
+                for match in matches:
+                    type = "journal"
+                    full = match.group(1)
+                    original = match.group(1)[::-1]
+                    date = match.group(4)[::-1]
+                    start_page = match.group(2)[::-1]
+                    vol = match.group(4)[::-1]
+                    title = match.group(3)[::-1]
+                    author = [(match.group(5)[::-1],"")]
+                    references = append_reference(references=references, flag_error=print_errors, type=type,
+                                                  title=title,
+                                                  date=date, start_page=start_page,
+                                                  author=author, volume=vol, full_cite=full,
+                                                  original_cite=original)
+
             return create_citations(references, opinion)
 
+    def find_restatements(text, opinion):
+        if testing:
+            print("Looking for Restatements")
+        references=[]
+        matches = re.finditer(r"((\d+)? (Restatement [\w+\(\)\s]+) (\d+) \(([A-Za-z\d][\sA-Za-z\d\.]*\s)?([0-9]{4})\))",text)
+        if matches:
+            for match in matches:
+                type = "Restatement"
+                full = match.group(1)
+                original = match.group(1)
+                volume = ""
+                if match.group(2):
+                    volume = match.group(2)
+                title = match.group(3)
+                pages = match.group(4)
+                edition = ""
+                author = [("Restatement", "")]
+                if match.group(5):
+                    edition = match.group(5)
+                date = match.group(6)
+                references = append_reference(references=references, flag_error=print_errors, type=type, title=title,
+                                              date=date, author=author, full_cite=full, edition=edition, pages=pages,
+                                              volume = volume, original_cite=original)
+        matches = re.finditer(r"((\d+)?\s?(Restatement [\w+\(\)\s]+) (§§?\s?\w+(?: \d+,\d+,?\d*,?\d*)?(?:\d+\(\d+\))?(?:, Comment [A-Za-z]+)?(?:,? pp?.? \d+(?:,?-?\d+)?)?(?:,? and [\w\s']+)?)\s*\(([A-Za-z\d][\sA-Za-z\d\.]*\s)?([0-9]{4})\))",
+                              text)
+        for match in matches:
+            type = "Restatement"
+            full = match.group(1)
+            original = match.group(1)
+            olume = ""
+            if match.group(2):
+                volume = match.group(2)
+            title = match.group(3)
+            pages = match.group(4)
+            author = [("Restatement", "")]
+            edition = ""
+            if match.group(5):
+                edition = match.group(5)
+            date = match.group(6)
+            if testing:
+                print("Restatement: " + original)
+            references = append_reference(references=references, flag_error=print_errors, type=type, title=title,
+                                              date=date, author=author, full_cite=full, edition=edition, pages=pages,
+                                              volume=volume, original_cite=original)
+
+        return create_citations(references, opinion)
     def find_other(text, opinion):
+        if testing:
+            print("Looking for Other")
         references=[]
         matches = re.finditer(r"(Letter from ([\w.\s]+\s)?([\w]+)\sto([\w.\s]+)\s\(([\w]{3,4}\.?\s\d+,\s*\d{4})\))",text)
         if matches:
@@ -686,6 +1279,8 @@ def find_citations(opinion, as_citations=False):
         return create_citations(references, opinion)
 
     print_errors = False
+    if testing:
+        print_errors = True
     text = opinion.opinion_text
     references = []
     citations = []
@@ -693,21 +1288,26 @@ def find_citations(opinion, as_citations=False):
     books = find_books(text, opinion)
     if books:
         citations = citations + books
-    news = find_news(text, opinion)
-    if news:
-        citations = citations + news
+    if testing:
+        print("Warning: News is turned off due to bug!")
+    #news = find_news(text, opinion)
+    #if news:
+    #    citations = citations + news
     journals = find_journals(text, opinion)
     if journals:
         citations = citations + journals
     other_sources = find_other(text, opinion)
     if other_sources:
         citations = citations + other_sources
+    restatements = find_restatements(text, opinion)
+    if restatements:
+        citations = citations + other_sources
 
     return citations
 
 def get_dir(dir="./../Legal_Parser/Parsed_Cases", testing=False):
     #dir="./../parsed_cases_CAP"
-    dir="./../Citator_Cases"
+    #dir="./../Citator_Cases"
     if testing:
         dir="./../Citator_Cases_tests"
     os.makedirs(dir, exist_ok=True)
@@ -733,10 +1333,13 @@ def write_citations(cites):
         for cite in cites:
             writer.writerow(cite.export())
 
-def main(testing = False, dir=""):
+def main(testing = False, dir=None, testing_dir=False):
     if testing:
         print("testing features are enabled!")
-    dir = get_dir(dir=dir, testing=testing)
+    if dir:
+        dir = get_dir(dir=dir, testing=testing_dir)
+    else:
+        dir = get_dir(testing=testing_dir)
     citations = []
     dir_ref = get_dir_ref()
 
@@ -751,8 +1354,10 @@ def main(testing = False, dir=""):
             #print(dir + "/" + file)
             json_data = open(dir + "/" + file).read()
             opinion_cluster = json_to_cluster(json_data)
+            if(testing):
+                print("New Opinion Cluster: " + opinion_cluster.name + "!")
             for opinion in opinion_cluster.opinions:
-                new_citations = find_citations(opinion)
+                new_citations = find_citations(opinion, testing=testing)
                 potential_citations = potential_citations + "\n" + find_potential_citations(opinion)
                 if new_citations:
                     #print(citations)
@@ -766,4 +1371,4 @@ def main(testing = False, dir=""):
     output.close()
 
 if __name__ == "__main__":
-    main(testing=True)
+    main(testing=True, testing_dir=True, dir="./../Citator_Cases_Storage")
