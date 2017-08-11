@@ -151,7 +151,7 @@ class Reference:
         return date_return
 
     def save(self):
-        dir=get_dir_ref()
+        dir=get_dir_ref(dir = "/Volumes/WD My Passport/LILProject/References")
         new_reference = True
         pk1_file = open(dir + "/references.pk1", 'rb')
         reference_list = pickle.load(pk1_file)
@@ -168,7 +168,7 @@ class Reference:
             self.update()
 
     def update(self):
-        ref_dir = get_dir_ref()
+        ref_dir = get_dir_ref(dir = "/Volumes/WD My Passport/LILProject/References")
         file_name = self.file_name
         doc = open(ref_dir + "/" + file_name +  ".json", 'r+').read()
         data = json.loads(doc)
@@ -181,7 +181,7 @@ class Reference:
         self.citations = self.citations.append(citation)
 
     def write_to_file(self):
-        dir = get_dir_ref()
+        dir = get_dir_ref(dir = "/Volumes/WD My Passport/LILProject/References")
         json_2_b = {}
         json_2_b['type'] = self.type
         json_2_b['title'] = self.title
@@ -735,7 +735,7 @@ def find_citations(opinion, as_citations=False, testing=False):
                                               author=authors, volume=vol, pages=pages, full_cite=full, edition=edition, original_cite=original)
 
         #Books with chapters
-        matches = re.finditer(r"(\)(?:\.de )?(\d{3,4})\s*([^\(]*)\(\s*(?:([\d-]+ .p?p ,)?[\w]+ .hc ,)([\w\s':,\.]+[A-Z0-9])\s*,(([\w]+[A-Z])\s*([\.\s\w]*[A-Z])?)?\s*(?:(?:(?:&\s)|(?:dna\s)),?([\w]*[A-Z])\s*(\.?[\w]*[A-Z]\s*(\.?[\w]*[A-Z])?)?\s*)?(?:,([\w]*[A-Z])\s*(\.?[\w]*[A-Z]\s*(\.?[\w]*[A-Z])?\s*)?)?(?:,([\w]*[A-Z])\s*(\.?[\w]*[A-Z]\s*(\.?[\w]*[A-Z])?\s*)?)?(?:,([\w]*[A-Z])\s*(\.?[\w]*[A-Z]\s*(\.?[\w]*[A-Z])?\s*)?)?(?:,([\w]*[A-Z])\s*(\.?[\w]*[A-Z]\s*(\.?[\w]*[A-Z])?\s*)?)?(\d+)?)",
+        matches = re.finditer(r"(\)(?:\.de )?(\d{3,4})\s*([^\(]*)\(\s*(?:([\d-]+ .p?p ,)?[\w]+ .hc ,)([\w\s':,\.]+[A-Z0-9])\s*,(([\w]+[A-Z])\s*([\.\s\w]*[A-Z])?)\s*(?:(?:(?:&\s)|(?:dna\s)),?([\w]*[A-Z])\s*(\.?[\w]*[A-Z]\s*(\.?[\w]*[A-Z])?)?\s*)?(?:,([\w]*[A-Z])\s*(\.?[\w]*[A-Z]\s*(\.?[\w]*[A-Z])?\s*)?)?(?:,([\w]*[A-Z])\s*(\.?[\w]*[A-Z]\s*(\.?[\w]*[A-Z])?\s*)?)?(?:,([\w]*[A-Z])\s*(\.?[\w]*[A-Z]\s*(\.?[\w]*[A-Z])?\s*)?)?(?:,([\w]*[A-Z])\s*(\.?[\w]*[A-Z]\s*(\.?[\w]*[A-Z])?\s*)?)?(\d+)?)",
                             rev_text)
         for match in matches:
             date = match.group(2)[::-1]
@@ -803,7 +803,7 @@ def find_citations(opinion, as_citations=False, testing=False):
             pages = match.group(3)
             if match.group(4):
                 edition = match.group(4)
-            herein.append[match.group(5)[::-1]] = [title, edition, date]
+            herein[match.group(5)[::-1]] = [title, edition, date]
             if testing:
                 print(original)
             references = append_reference(references=references, flag_error=print_errors, type=type, title=title, date=date,
@@ -1007,7 +1007,7 @@ def find_citations(opinion, as_citations=False, testing=False):
 
                 references = append_reference(references=references, flag_error=print_errors, type=type,
                                               title=title, date=date,
-                                              author=author, volume_title=vol, full_cite=full,
+                                              author=author, volume_title=volume, full_cite=full,
                                               edition=edition, original_cite=original)
 
         return create_citations(references,opinion)
@@ -1016,37 +1016,43 @@ def find_citations(opinion, as_citations=False, testing=False):
         if testing:
             print("Looking for News")
         references = []
+        rev_text = text[::-1]
 
-        matches = re.finditer(r"((?:([A-Z]\w+), )?([\w\s'’–]+?(?:[,?]) )?((?:[A-Z][\w\.]+\s?)+), ((?:[\w]{3,4}.? \d+-)?[\w]{3,4}.? \d+, \d{4})(, pp?\. [A-Z]\w+(?:\s\d+)?)?)", text)
+        print(opinion.name)
+        matches = re.findall(r"([.;]((?:\d+ )?\w+ \.p?p) ,(\d{4} ,\d+ .?\w{3,4}(?:\-\d+ .?\w{3,4})?) ,((?:\s?[\w\.]+[A-Z])+)(?: [,?]([\w\s'’\–]+[A-Z]))?(?: ,(\w+[A-Z]( & \w+[A-Z])?))?)", rev_text)
         if testing:
             print("search complete")
+        if matches and testing:
+            print("first match: " + matches[0][0])
         for match in matches:
             print(match)
             if testing:
                 print(match)
                 print("New News Match!")
-            full = match.group(1)
-            original = match.group(1)
+            full = match[0]
+            original = match[0]
             pages = "not_specified"
-            if match.group(6):
-                pages = match.group(6)
-            if match.group(3):
-                title = match.group(3).strip()
+            if match[1]:
+                pages = match[1]
+            if match[4]:
+                title = match[4].strip()[::-1]
             else:
                 title = "untitled (" + pages + ")"
-            vol = match.group(4)
-            date = match.group(5)
+            vol = match[3][::-1]
+            date = match[2][::-1]
             type = "book"
-            if match.group(2):
-                author = [(match.group(2),"")]
+            if match[5]:
+                author = [(match[5][::-1],"")]
             else:
                 author_temp = "no_author_(" + vol +  ")"
                 author = [(author_temp,"")]
+            if testing:
+                print(original)
             references = append_reference(references=references, flag_error=print_errors, type=type,
                                           title=title, date=date,
                                           author=author, volume_title=vol, full_cite=full, original_cite=original)
-        if testing:
-            print("done with matches")
+            if testing:
+                print("done with matches")
         return create_citations(references, opinion)
 
     def find_journals(text, opinion):
@@ -1153,7 +1159,7 @@ def find_citations(opinion, as_citations=False, testing=False):
                             authors = [(match.group(22)[::-1], "")] + authors
                     references = append_reference(references=references, flag_error=print_errors, type=type, title=title,
                                               date=date, start_page=start_page, journal_title=journal_title,
-                                              author=authors, volume=vol, pages=pages, full_cite=full,
+                                              author=authors, volume=vol, pages=start_page, full_cite=full,
                                               original_cite=original)
 
             #Harvard Law Supreme Court Term
@@ -1225,7 +1231,7 @@ def find_citations(opinion, as_citations=False, testing=False):
             type = "Restatement"
             full = match.group(1)
             original = match.group(1)
-            olume = ""
+            volume = ""
             if match.group(2):
                 volume = match.group(2)
             title = match.group(3)
@@ -1288,11 +1294,11 @@ def find_citations(opinion, as_citations=False, testing=False):
     books = find_books(text, opinion)
     if books:
         citations = citations + books
-    if testing:
-        print("Warning: News is turned off due to bug!")
-    #news = find_news(text, opinion)
-    #if news:
-    #    citations = citations + news
+    #if testing:
+    #    print("Warning: News is turned off due to bug!")
+    news = find_news(text, opinion)
+    if news:
+        citations = citations + news
     journals = find_journals(text, opinion)
     if journals:
         citations = citations + journals
@@ -1326,12 +1332,34 @@ def clean(citations=[]):
     return new_citations
 
 def write_citations(cites):
-    with open('./citations.csv','w') as csvfile:
+    with open("/Volumes/WD My Passport/LILProject/References/citations.csv",'w') as csvfile:
         fieldnames = [ 'opinion_name','reference_name', 'opinion_id','reference_id']
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()
         for cite in cites:
             writer.writerow(cite.export())
+
+def find_files(dir, dir_ref, citations, potential_citations="", testing=False):
+    for file in os.listdir(dir):
+        print(dir + "/" + file)
+        if file.endswith(".json"):
+            print(dir + "/" + file)
+            json_data = open(dir + "/" + file).read()
+            opinion_cluster = json_to_cluster(json_data)
+            if (testing):
+                print("New Opinion Cluster: " + opinion_cluster.name + "!")
+            for opinion in opinion_cluster.opinions:
+                new_citations = find_citations(opinion, testing=testing)
+                potential_citations = potential_citations + "\n" + find_potential_citations(opinion)
+                if new_citations:
+                    # print(citations)
+                    citations = citations + new_citations
+        if os.path.isdir(dir + "/" + file):
+            path = dir + "/" + file
+            new_cites = find_files(dir=path, dir_ref=dir_ref, citations=citations, potential_citations=potential_citations)
+            citations = citations + new_cites[0]
+            potential_citations = potential_citations+new_cites[1]
+    return (citations, potential_citations)
 
 def main(testing = False, dir=None, testing_dir=False):
     if testing:
@@ -1341,34 +1369,24 @@ def main(testing = False, dir=None, testing_dir=False):
     else:
         dir = get_dir(testing=testing_dir)
     citations = []
-    dir_ref = get_dir_ref()
+    dir_ref = get_dir_ref(dir = "/Volumes/WD My Passport/LILProject/References")
 
-    reference_list = {"0":"test"}
+    reference_list = {"0": "test"}
     output = open(dir_ref + "/references.pk1", "wb")
     pickle.dump(reference_list, output, -1)
     output.close()
-    potential_citations = ""
 
-    for file in os.listdir(dir):
-        if file.endswith(".json"):
-            #print(dir + "/" + file)
-            json_data = open(dir + "/" + file).read()
-            opinion_cluster = json_to_cluster(json_data)
-            if(testing):
-                print("New Opinion Cluster: " + opinion_cluster.name + "!")
-            for opinion in opinion_cluster.opinions:
-                new_citations = find_citations(opinion, testing=testing)
-                potential_citations = potential_citations + "\n" + find_potential_citations(opinion)
-                if new_citations:
-                    #print(citations)
-                    citations = citations + new_citations
+    citations_both = find_files(dir=dir, dir_ref=dir_ref, citations=citations, testing=testing)
+
+    citations = citations_both[0]
+    potential_citations = citations_both[1]
 
     citations = clean(citations)
     write_citations(citations)
 
-    output=open('./possible_citations.txt','w')
+    output=open(dir_ref + '/possible_citations.txt','w')
     output.write(potential_citations)
     output.close()
 
 if __name__ == "__main__":
-    main(testing=True, testing_dir=True, dir="./../Citator_Cases_Storage")
+    main(testing=True, testing_dir=False, dir="/Volumes/WD My Passport/LILProject/CAP_data_parsed/")

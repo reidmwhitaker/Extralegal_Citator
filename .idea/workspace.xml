@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="f44046cc-4fc6-4a83-a541-2fde118eee2c" name="Default" comment="">
+    <list default="true" id="f44046cc-4fc6-4a83-a541-2fde118eee2c" name="Default" comment="Updated citation search algorithm--includes many more formats of citations, particularly section and paragraph symbols">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Citator.py" afterPath="$PROJECT_DIR$/Citator.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/citations.csv" afterPath="$PROJECT_DIR$/citations.csv" />
@@ -16,7 +16,7 @@
   </component>
   <component name="CoverageDataManager">
     <SUITE FILE_PATH="coverage/PyCode$Citator.coverage" NAME="Citator Coverage Results" MODIFIED="1496854531349" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/Citator$Citator.coverage" NAME="Citator Coverage Results" MODIFIED="1502240687152" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/Citator$Citator.coverage" NAME="Citator Coverage Results" MODIFIED="1502297521735" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
   <component name="DatabaseView">
     <option name="SHOW_INTERMEDIATE" value="true" />
@@ -59,20 +59,20 @@
       <file leaf-file-name="Citator.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/Citator.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="360">
-              <caret line="681" column="0" lean-forward="true" selection-start-line="681" selection-start-column="0" selection-end-line="681" selection-end-column="0" />
+            <state relative-caret-position="202">
+              <caret line="1371" column="79" lean-forward="true" selection-start-line="1371" selection-start-column="32" selection-end-line="1371" selection-end-column="79" />
               <folding>
                 <element signature="e#0#11#0" expanded="true" />
                 <element signature="e#119#603#0" expanded="false" />
                 <element signature="e#1403#1632#0" expanded="false" />
-                <element signature="e#9297#9436#0" expanded="false" />
-                <element signature="e#9458#10078#0" expanded="false" />
-                <element signature="e#10108#10151#0" expanded="false" />
-                <element signature="e#10183#10250#0" expanded="false" />
-                <element signature="e#11396#12038#0" expanded="false" />
-                <element signature="e#12406#12581#0" expanded="false" />
-                <element signature="e#66520#66566#0" expanded="false" />
-                <element signature="e#66597#66794#0" expanded="false" />
+                <element signature="e#9456#9595#0" expanded="false" />
+                <element signature="e#9617#10237#0" expanded="false" />
+                <element signature="e#10267#10310#0" expanded="false" />
+                <element signature="e#10342#10409#0" expanded="false" />
+                <element signature="e#11555#12197#0" expanded="false" />
+                <element signature="e#12565#12740#0" expanded="false" />
+                <element signature="e#66864#66910#0" expanded="false" />
+                <element signature="e#66941#67138#0" expanded="false" />
               </folding>
             </state>
           </provider>
@@ -91,8 +91,8 @@
       <file leaf-file-name="possible_citations.txt" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/possible_citations.txt">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="45">
-              <caret line="3" column="0" lean-forward="false" selection-start-line="3" selection-start-column="0" selection-end-line="3" selection-end-column="0" />
+            <state relative-caret-position="0">
+              <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
               <folding />
             </state>
           </provider>
@@ -109,7 +109,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>div class=&quot;num&quot;</find>
       <find>get</find>
       <find>add</find>
       <find>Judicial</find>
@@ -138,6 +137,8 @@
       <find>find_citations</find>
       <find>print</find>
       <find>Restatement:</find>
+      <find>get_dir_re</find>
+      <find>get_dir_ref</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -170,7 +171,6 @@
     <sorting>DEFINITION_ORDER</sorting>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="4" />
     <option name="y" value="23" />
     <option name="width" value="1276" />
     <option name="height" value="777" />
@@ -191,7 +191,6 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
-      <pane id="Scope" />
       <pane id="Scratches" />
       <pane id="ProjectPane">
         <subPane>
@@ -207,6 +206,7 @@
           </PATH>
         </subPane>
       </pane>
+      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -424,7 +424,14 @@
       <option name="project" value="LOCAL" />
       <updated>1502148401098</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="Updated citation search algorithm--includes many more formats of citations, particularly section and paragraph symbols">
+      <created>1502241161991</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1502241161991</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="TodoView">
@@ -437,14 +444,13 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="4" y="23" width="1276" height="777" extended-state="6" />
-    <editor active="true" />
+    <frame x="0" y="23" width="1276" height="777" extended-state="6" />
     <layout>
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.26661265" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.2706645" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32868218" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.21605839" sideWeight="0.5032415" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3298217" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.21605839" sideWeight="0.49675852" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.21605839" sideWeight="0.49675852" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32846716" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32846716" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.24958813" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
@@ -493,7 +499,8 @@
   <component name="VcsManagerConfiguration">
     <option name="CHECK_NEW_TODO" value="false" />
     <MESSAGE value="Updated citation search algorithm" />
-    <option name="LAST_COMMIT_MESSAGE" value="Updated citation search algorithm" />
+    <MESSAGE value="Updated citation search algorithm--includes many more formats of citations, particularly section and paragraph symbols" />
+    <option name="LAST_COMMIT_MESSAGE" value="Updated citation search algorithm--includes many more formats of citations, particularly section and paragraph symbols" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -504,7 +511,7 @@
           </properties>
         </breakpoint>
       </default-breakpoints>
-      <option name="time" value="37" />
+      <option name="time" value="40" />
     </breakpoint-manager>
     <watches-manager />
   </component>
@@ -745,12 +752,6 @@
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/README.md">
-      <provider editor-type-id="text-editor">
-        <state relative-caret-position="64">
-          <caret line="4" column="0" lean-forward="false" selection-start-line="4" selection-start-column="0" selection-end-line="4" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
       <provider selected="true" editor-type-id="split-provider[text-editor;markdown-preview-editor]">
         <state split_layout="SPLIT">
           <first_editor relative-caret-position="0">
@@ -758,6 +759,12 @@
             <folding />
           </first_editor>
           <second_editor />
+        </state>
+      </provider>
+      <provider editor-type-id="text-editor">
+        <state relative-caret-position="64">
+          <caret line="4" column="0" lean-forward="false" selection-start-line="4" selection-start-column="0" selection-end-line="4" selection-end-column="0" />
+          <folding />
         </state>
       </provider>
     </entry>
@@ -783,8 +790,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/possible_citations.txt">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="45">
-          <caret line="3" column="0" lean-forward="false" selection-start-line="3" selection-start-column="0" selection-end-line="3" selection-end-column="0" />
+        <state relative-caret-position="0">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding />
         </state>
       </provider>
@@ -814,20 +821,20 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/Citator.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="360">
-          <caret line="681" column="0" lean-forward="true" selection-start-line="681" selection-start-column="0" selection-end-line="681" selection-end-column="0" />
+        <state relative-caret-position="202">
+          <caret line="1371" column="79" lean-forward="true" selection-start-line="1371" selection-start-column="32" selection-end-line="1371" selection-end-column="79" />
           <folding>
             <element signature="e#0#11#0" expanded="true" />
             <element signature="e#119#603#0" expanded="false" />
             <element signature="e#1403#1632#0" expanded="false" />
-            <element signature="e#9297#9436#0" expanded="false" />
-            <element signature="e#9458#10078#0" expanded="false" />
-            <element signature="e#10108#10151#0" expanded="false" />
-            <element signature="e#10183#10250#0" expanded="false" />
-            <element signature="e#11396#12038#0" expanded="false" />
-            <element signature="e#12406#12581#0" expanded="false" />
-            <element signature="e#66520#66566#0" expanded="false" />
-            <element signature="e#66597#66794#0" expanded="false" />
+            <element signature="e#9456#9595#0" expanded="false" />
+            <element signature="e#9617#10237#0" expanded="false" />
+            <element signature="e#10267#10310#0" expanded="false" />
+            <element signature="e#10342#10409#0" expanded="false" />
+            <element signature="e#11555#12197#0" expanded="false" />
+            <element signature="e#12565#12740#0" expanded="false" />
+            <element signature="e#66864#66910#0" expanded="false" />
+            <element signature="e#66941#67138#0" expanded="false" />
           </folding>
         </state>
       </provider>
